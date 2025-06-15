@@ -58,14 +58,7 @@ d. 把删除的文件以目录树的形式打印出来
 但是需要考虑可扩展性，后面扫描范围会提升至扫描整个项目
 现在开始做吧，输入需要指定类以及指定的方法
 
-### 代码优化1
-我建议是额外输出一个json文件，以便于为后续根据这个json文件剔除step2-set不被方法依赖的所有代码。
-实际运行之后，[1:1-1:1]这个是行号吗，我看所有的都打印了这个，你的行号解析应该是有问题的
-
-### 代码优化2
-你的代码需要优化一下，输出的依赖，不包含方法体内部包含的依赖，比如`DateUtil.getEndDate(searchEntity.getEndInDate())`这个就没有考虑到
-
-### 代码优化3
+### 代码优化3 - xxx.aaa 和 xxx 合并
 我运行了代码之后有下面这样的输出：
   📁 方法调用: PageUtil.process [279:16-281:90]
     ├── 📄 类: com.paut.tender.mgt.api.controller.order.PurchaserOrderSettlementController
@@ -77,8 +70,6 @@ d. 把删除的文件以目录树的形式打印出来
     └── 📝 描述: 静态类访问: PageUtil
 这样应该是PurchaserOrderSettlementController.java#search方法体内的`return PageUtil.process`这个代码生成的输出，输出了方法调用: PageUtil.process和静态访问: PageUtil。我觉得两者取一个精确的就能表达出PurchaserOrderSettlementController.java#search方法对于这个依赖的信息，这样就冗余了。
 所以你应该新增一个策略，如果遇到了 XXX.aaa 和 XXX 这种依赖，应该把XXX去掉。你可以把收集到一个map中，这个map用于存类，比如遇到了XXX这个依赖了，就创建一个条目key = XXX，值为数组，装入XXX。如果后面遇到精确的XXX.aaa这种，就去掉XXX。如果先遇到XXX.aaa，再遇到XXX，就不添加。
-
-并且我想展示输出中"类:"字段是这个依赖所在的类，而不是它被引用的位置，"文件:"也是一样，是这个依赖出自哪个文件。
 
 ### 代码优化4
 1. 我发现 PurchaserAuthConstant.TENDER_PURCHASER_ORDER_SETTLEMENT_LIST 这种只要出自不在本文件
