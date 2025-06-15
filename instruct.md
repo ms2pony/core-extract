@@ -2,24 +2,22 @@
 在该空目录下创建一个标准maven java工程，多模块
 我的运行环境是Windows，我经常用的shell 是powershell。先不要创建子模块，创建一个空的父模块架子即可。
 我使用IDEA开发，不使用mvn进行工程创建，另外java版本为1.8
+后续可以在子模块装上常用的工具lombok和slf4j日志系统，现在不装
 	
 ## 步骤2
 在该工程下创建一个子模块，并在该子模块下写java代码用于除去一个java maven 工程中一些我不想要的文件夹或者文件，
 我需要对这个java工程进行文件剔除，其路径为"K:\tender-mgt"
 具体内容/步骤如下
 a. 创建输出文件夹output(如果存在就删除,然后再创建)，并在文件夹中创建 step1-unsed-set  和 step2-set，这两个文件夹也是(如果存在就删除,然后再创建)，将需要剔除的文件copy到 step1-unsed-set，将不需要剔除的文件copy到step2-set文件
-
-
 b. 剔除 .git 文件夹；剔除 *.java, *.xml 之外的所有文件，但保留根目录下的文件以及不动resource文件夹下的所有文件
-
 c. 剔除后发现是空的文件夹，直接删除
-
 d. 把删除的文件以目录树的形式打印出来
 
-对于该子模块代码结构的说明，可以加一个配置类，用于设置剔除规则，简单一点的，只取必要配置。然后getter和setter可以用lombok插件
+对于该子模块代码结构的说明，可以加一个配置类，用于设置剔除规则，简单一点的，只取必要配置。
+log.xx 使用slf4j 日志系统，不要用System.out.println()
+然后getter和setter可以用lombok插件
 
 ### 优化1
-1. log.xx 使用slf4j 日志系统，不要用System.out.println()
 2. try catch 粒度细一点，不要包在最外面，Exception 类型指定需要明确
 3. 不要用常量字符串，用常量枚举
 4. 删除文件夹的方法deleteDirectory有问题，在删除.git文件夹下面的某个文件时出问题了。
