@@ -74,3 +74,17 @@ log.xx 使用slf4j 日志系统，不要用System.out.println()
 类就会是这样 PurchaserAuthConstant ，但是我需要完整的类路径。
 2. 另外，对于注解依赖使用getClassName方法无法获取其所在的接口名或者类名
 3. 另外不希望通过推测路径这种方式去得到出自的文件路径
+
+## javapaser学习
+
+创建一个新的子模块，写几个简单的demo让我学习javaparser和JavaSymbolSolver，给你一个任务，用简单的代码，在语义上找出这个方法的调用链。
+
+```java
+    /**
+     * 查询结算单列表
+     */
+    @ApiOperation(value = "查询结算单list", notes = "查询结算单list")
+    @PostMapping("/search")
+    @Auth({PurchaserAuthConstant.TENDER_PURCHASER_ORDER_SETTLEMENT_LIST, PurchaserAuthConstant.TENDER_PURCHASER_ORDER_SETTLEMENT_LIST_TOC})
+    public PageResponse<OrderSettlementEntity> search(@Validated @RequestBody OrderSettlementSearchEntity searchEntity);
+```
