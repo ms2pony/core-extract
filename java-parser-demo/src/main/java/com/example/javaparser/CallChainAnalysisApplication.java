@@ -51,7 +51,7 @@ public class CallChainAnalysisApplication {
             
             // 分析指定方法的调用链
             // 目标方法: PurchaserOrderSettlementController.search
-            analyzer.analyzeMethodCallChain("PurchaserOrderSettlementController", "search");
+            analyzer.analyzeMethodCallChain("K:\\power-script\\core-extract\\output\\step2-set\\tender-api\\src\\main\\java\\com\\paut\\tender\\mgt\\api\\controller\\order\\PurchaserOrderSettlementController.java", "search");
             
         } catch (Exception e) {
             log.error("分析过程中发生错误: {}", e.getMessage(), e);

@@ -50,8 +50,8 @@ public class JavaSymbolSolverDemo {
         try {
             // 设置类型解析器
             TypeSolver typeSolver = new CombinedTypeSolver(
-                new ReflectionTypeSolver(),
-                new JavaParserTypeSolver(new File("src"))
+                new ReflectionTypeSolver()
+//                new JavaParserTypeSolver(new File("src"))
             );
             
             JavaParser javaParser = new JavaParser();
