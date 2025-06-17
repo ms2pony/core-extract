@@ -30,6 +30,7 @@
         <module>file-cleaner</module>
         <module>java-parser-demo</module>
         <module>code-inspect</module>
+        <module>dependency-analyzer</module>
     </modules>
 
     <!-- 依赖管理 -->
