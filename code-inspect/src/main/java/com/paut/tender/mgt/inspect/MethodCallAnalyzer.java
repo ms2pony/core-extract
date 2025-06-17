@@ -5,12 +5,15 @@ import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.resolution.UnsolvedSymbolException;
-import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
+import com.github.javaparser.resolution.declarations.*;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
@@ -35,6 +38,9 @@ public class MethodCallAnalyzer {
 
     // 1.添加一个成员变量map，用于存储java类文件FilePath Map，ClassqualifiedName为map
     private Map<String, String> classFilePathMap;
+
+    // 分析调用者的类
+    private JavaParserFacade facade;
 
     public MethodCallAnalyzer() {
         CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
@@ -61,6 +67,8 @@ public class MethodCallAnalyzer {
         JavaSymbolSolver symbolSolver = new JavaSymbolSolver(combinedTypeSolver);
         this.javaParser = new JavaParser();
         this.javaParser.getParserConfiguration().setSymbolResolver(symbolSolver);
+
+        facade = JavaParserFacade.get(combinedTypeSolver);
         
         // 初始化compilationUnitMap
         this.classFilePathMap = new HashMap<>();
@@ -302,11 +310,60 @@ public class MethodCallAnalyzer {
             if (methodCall.getBegin().isPresent()) {
                 int line = methodCall.getBegin().get().line;
                 if (line >= startLine && line <= endLine) {
+                    MethodCallInfo callInfo = new MethodCallInfo();
+                    List<String> parameterTypes = new ArrayList<>();
+
+                    for (Expression param : methodCall.getArguments()) {
+                        try {
+                            // 显式声明类型
+//                            ResolvedValueDeclaration resolvedDecl = facade.solve(param).getCorrespondingDeclaration();
+                            Optional<String> declaringClass = Optional.empty();
+
+                            if(param instanceof FieldAccessExpr){
+                                FieldAccessExpr fieldParam = param.asFieldAccessExpr();
+                                ScopeInfo scopeInfo = extractScopeInfo(fieldParam);
+                                declaringClass = Optional.of(scopeInfo.getClassQualifiedName());
+                            }
+
+//                            if (resolvedDecl instanceof ResolvedFieldDeclaration) {
+//                                ResolvedFieldDeclaration fieldDecl = resolvedDecl.asField();
+//                                declaringClass = Optional.of(fieldDecl.declaringType().getQualifiedName());
+//                                System.out.println("参数: " + param + " → 字段所在类: " + declaringClass.get());
+//                            } else if (resolvedDecl instanceof ResolvedEnumConstantDeclaration) {
+//                                ResolvedEnumConstantDeclaration enumDecl = resolvedDecl.asEnumConstant();
+//                                declaringClass = Optional.of(enumDecl.getType().asReferenceType().getQualifiedName());
+//                                System.out.println("参数: " + param + " → 枚举常量所在类: " + declaringClass.get());
+//                            } else if (resolvedDecl instanceof ResolvedParameterDeclaration) {
+//                                System.out.println("参数: " + param + " → 来自方法参数(这个方法调用所在的方法)");
+//                            } else if (resolvedDecl instanceof ResolvedValueDeclaration) {
+//                                System.out.println("参数: " + param + " → 来自局部变量");
+//                            } else {
+//                                System.out.println("参数: " + param + " → 无法获取 declaringType，类型: " + resolvedDecl.getClass().getSimpleName());
+//                            }
+
+//                            // 现在可以使用 declaringClass.isPresent() 来判断是否为空
+//                            if (declaringClass.isPresent()) {
+//                                // 执行有 declaringClass 的逻辑
+//                                String className = declaringClass.get();
+//                                // 在这里添加你的业务逻辑
+//                            } else {
+//                                // 执行没有 declaringClass 的逻辑
+//                            }
+                            declaringClass.ifPresent(className->{
+                                parameterTypes.add(className);
+                            });
+
+                        } catch (Exception e) {
+                            System.out.println("参数: " + param + " → 无法解析，原因: " + e.getMessage());
+                        }
+                    }
+
+                    callInfo.setParameterTypes(parameterTypes);
+
                     try {
                         // 解析方法调用
                         ResolvedMethodDeclaration resolved = methodCall.resolve();
-                        
-                        MethodCallInfo callInfo = new MethodCallInfo();
+
                         callInfo.setMethodName(methodCall.getNameAsString());
                         callInfo.setLine(line);
                         callInfo.setColumn(methodCall.getBegin().get().column);
@@ -320,11 +377,11 @@ public class MethodCallAnalyzer {
                         callInfo.setPackageName(resolved.getPackageName());
                         
                         // 获取参数类型
-                        List<String> parameterTypes = new ArrayList<>();
-                        for (int i = 0; i < resolved.getNumberOfParams(); i++) {
-                            parameterTypes.add(resolved.getParam(i).getType().describe());
-                        }
-                        callInfo.setParameterTypes(parameterTypes);
+//                        List<String> parameterTypes = new ArrayList<>();
+//                        for (int i = 0; i < resolved.getNumberOfParams(); i++) {
+//                            parameterTypes.add(resolved.getParam(i).getType().describe());
+//                        }
+//                        callInfo.setParameterTypes(parameterTypes);
                         
                         result.getMethodCalls().add(callInfo);
                         
@@ -335,71 +392,33 @@ public class MethodCallAnalyzer {
                         // 专门处理符号无法解析的情况
                         log.warn("无法解析方法调用符号: {} 在行 {}, 可能缺少依赖jar包", 
                                 methodCall.getNameAsString(), line);
+
+                        callInfo.setMethodName(methodCall.getNameAsString());
+                        callInfo.setLine(line);
+                        callInfo.setColumn(methodCall.getBegin().get().column);
+                        callInfo.setDeclaringClass("未解析-可能缺少依赖");
+                        callInfo.setResolved(false);
+//                        callInfo.setErrorMessage("UnsolvedSymbol: " + e.getMessage());
                         
                         // 尝试通过getScope获取调用方法所在的类信息
-                        try {
-                            MethodCallInfo callInfo = new MethodCallInfo();
-                            callInfo.setMethodName(methodCall.getNameAsString());
-                            callInfo.setLine(line);
-                            callInfo.setColumn(methodCall.getBegin().get().column);
-                            callInfo.setDeclaringClass("未解析-可能缺少依赖");
-                            callInfo.setErrorMessage("UnsolvedSymbol: " + e.getMessage());
-                            callInfo.setResolved(false);
-                            
-                            // 尝试获取scope信息
-                            if (methodCall.getScope().isPresent()) {
-                                String scopeInfo = "未知";
-                                try {
-                                    // 尝试解析scope的类型 - 使用显式类型声明替代var
-                                    ResolvedType scopeType = methodCall.getScope().get().calculateResolvedType();
-                                    // 获取scopeType的qualifiedName而不是describe()
-                                    if (scopeType.isReferenceType()) {
-                                        scopeInfo = scopeType.asReferenceType().getQualifiedName();
-                                    } else {
-                                        scopeInfo = scopeType.describe();
-                                    }
-                                    log.info("通过scope获取到调用类信息: {}", scopeInfo);
-                                    callInfo.setQualifiedName(scopeInfo);
-                                    callInfo.setClassQualifiedName(scopeInfo);  // 新增：设置类的完全限定名
-                                } catch (Exception scopeException) {
-                                    // 如果scope也无法解析，尝试获取scope的字符串表示
-                                    scopeInfo = methodCall.getScope().get().toString();
-                                    // callInfo.setQualifiedName("scopeException"+scopeInfo);
-                                    log.info("scope无法完全解析，获取字符串表示: {}", scopeInfo);
-                                }
-                                
-                                // 将scope信息添加到错误消息中
-                                callInfo.setErrorMessage("UnsolvedSymbol: " + e.getMessage() + ", Scope: " + scopeInfo);
-                                // 尝试从scope信息中提取可能的类名
-                                if (!scopeInfo.equals("未知") && !scopeInfo.isEmpty()) {
-                                    callInfo.setDeclaringClass("推测类型: " + scopeInfo);
-                                }
-                            }
-                            
-                            result.getMethodCalls().add(callInfo);
-                            
-                        } catch (Exception scopeAnalysisException) {
-                            log.warn("分析scope时发生错误: {}", scopeAnalysisException.getMessage());
-                            
-                            // 如果scope分析也失败，至少记录基本信息
-                            MethodCallInfo callInfo = new MethodCallInfo();
-                            callInfo.setMethodName(methodCall.getNameAsString());
-                            callInfo.setLine(line);
-                            callInfo.setColumn(methodCall.getBegin().get().column);
-                            callInfo.setDeclaringClass("未解析-可能缺少依赖");
-                            callInfo.setErrorMessage("UnsolvedSymbol: " + e.getMessage() + ", ScopeAnalysisError: " + scopeAnalysisException.getMessage());
-                            callInfo.setResolved(false);
+                        if (methodCall.getScope().isPresent()){
+                            ScopeInfo scopeInfo = extractScopeInfo(methodCall.getScope().get());
+                            String errorMsg = scopeInfo.getErrorMessage();
+                            errorMsg = "UnsolvedSymbol: " + e.getMessage() + errorMsg;
+                            callInfo.setErrorMessage(errorMsg);
 
-                            
-                            result.getMethodCalls().add(callInfo);
+                            if(scopeInfo.getDeclaringClass() !=null) callInfo.setDeclaringClass(scopeInfo.getDeclaringClass());
+                            if(scopeInfo.getClassQualifiedName() !=null) callInfo.setClassQualifiedName(scopeInfo.getClassQualifiedName());
+                            if(scopeInfo.getQualifiedName() !=null) callInfo.setQualifiedName(scopeInfo.getQualifiedName());
                         }
+
+                        result.getMethodCalls().add(callInfo);
                     } catch (Exception e) {
                         // 处理其他类型的异常
                         log.warn("解析方法调用时发生其他错误: {} 在行 {}, 错误: {}", 
                                 methodCall.getNameAsString(), line, e.getMessage());
                         
                         // 即使无法完全解析，也记录基本信息
-                        MethodCallInfo callInfo = new MethodCallInfo();
 
                         // 通过Scope中获取classQualifiedName
                         methodCall.getScope().ifPresent(scope->{
@@ -418,6 +437,44 @@ public class MethodCallAnalyzer {
                         result.getMethodCalls().add(callInfo);
                     }
                 }
+            }
+        }
+
+        public ScopeInfo extractScopeInfo(Expression scope){
+            ScopeInfo scopeInfo = new ScopeInfo();
+            try {
+                // 尝试获取scope信息
+                String scopeDesc = "未知";
+                try {
+                    // 尝试解析scope的类型 - 使用显式类型声明替代var
+                    ResolvedType scopeType = scope.calculateResolvedType();
+                    // 获取scopeType的qualifiedName而不是describe()
+                    if (scopeType.isReferenceType()) {
+                        scopeDesc = scopeType.asReferenceType().getQualifiedName();
+                    } else {
+                        scopeDesc = scopeType.describe();
+                    }
+                    log.info("通过scope获取到调用类信息: {}", scopeDesc);
+                    scopeInfo.setQualifiedName(scopeDesc);
+                    scopeInfo.setClassQualifiedName(scopeDesc);  // 新增：设置类的完全限定名
+                } catch (Exception scopeException) {
+                    // 如果scope也无法解析，尝试获取scope的字符串表示
+                    scopeDesc = scope.toString();
+                    // callInfo.setQualifiedName("scopeException"+scopeInfo);
+                    log.info("scope无法完全解析，获取字符串表示: {}", scopeDesc);
+                }
+
+                // 将scope信息添加到错误消息中
+                scopeInfo.setErrorMessage("Scope: " + scopeDesc);
+                // 尝试从scope信息中提取可能的类名
+                if (!scopeDesc.equals("未知") && !scopeDesc.isEmpty()) {
+                    scopeInfo.setDeclaringClass("推测类型: " + scopeDesc);
+                }
+                return scopeInfo;
+            } catch (Exception scopeAnalysisException) {
+                log.warn("分析scope时发生错误: {}", scopeAnalysisException.getMessage());
+                scopeInfo.setErrorMessage("ScopeAnalysisError: " + scopeAnalysisException.getMessage());
+                return scopeInfo;
             }
         }
     }
