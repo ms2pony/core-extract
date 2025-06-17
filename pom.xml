@@ -22,12 +22,14 @@
         <slf4j.version>1.7.36</slf4j.version>
         <logback.version>1.2.12</logback.version>
         <javaparser.version>3.25.4</javaparser.version>
+        <jackson.version>2.9.7</jackson.version>
     </properties>
 
     <!-- 子模块列表 -->
     <modules>
         <module>file-cleaner</module>
         <module>java-parser-demo</module>
+        <module>code-inspect</module>
     </modules>
 
     <!-- 依赖管理 -->
@@ -58,6 +60,16 @@
                 <groupId>com.github.javaparser</groupId>
                 <artifactId>javaparser-symbol-solver-core</artifactId>
                 <version>${javaparser.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
