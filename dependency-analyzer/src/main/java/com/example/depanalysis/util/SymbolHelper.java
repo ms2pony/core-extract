@@ -5,7 +5,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedValueDeclaration;
 import com.github.javaparser.resolution.types.ResolvedType;
-import com.github.javaparser.symbolsolver.JavaParserFacade;
+import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -72,7 +72,7 @@ public class SymbolHelper {
      */
     public static String[] resolveFieldAccess(FieldAccessExpr expr, JavaParserFacade facade) {
         try {
-            ResolvedValueDeclaration resolved = facade.solve(expr.getName());
+            ResolvedValueDeclaration resolved = facade.solve(expr).getDeclaration().get();
             if (resolved instanceof ResolvedFieldDeclaration) {
                 ResolvedFieldDeclaration field = (ResolvedFieldDeclaration) resolved;
                 String ownerQualifiedName = field.declaringType().getQualifiedName();
@@ -91,7 +91,7 @@ public class SymbolHelper {
      */
     public static String[] resolveNameExpr(NameExpr expr, JavaParserFacade facade) {
         try {
-            ResolvedValueDeclaration resolved = facade.solve(expr.getName());
+            ResolvedValueDeclaration resolved = facade.solve(expr.getName()).getDeclaration().get();
             
             if (resolved instanceof ResolvedFieldDeclaration) {
                 ResolvedFieldDeclaration field = (ResolvedFieldDeclaration) resolved;

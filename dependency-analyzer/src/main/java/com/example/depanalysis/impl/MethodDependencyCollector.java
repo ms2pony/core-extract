@@ -1,13 +1,13 @@
 package com.example.depanalysis.impl;
 
-import com.example.depanalysis.api.AnalysisConfig;
+import com.example.depanalysis.config.AnalysisConfig;
 import com.example.depanalysis.api.AnalysisReport;
 import com.example.depanalysis.model.ClassSymbols;
 import com.example.depanalysis.util.SymbolHelper;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import com.github.javaparser.symbolsolver.JavaParserFacade;
+import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
@@ -34,19 +34,19 @@ public class MethodDependencyCollector extends VoidVisitorAdapter<Void> {
         this.config = config;
     }
     
-    @Override
-    public void visit(AnnotationExpr n, Void arg) {
-        try {
-            // 处理注解类型
-            String qualifiedName = SymbolHelper.resolveAnnotationType(n, facade);
-            if (qualifiedName != null) {
-                store(qualifiedName, symbols -> symbols.getAnnotations().add(n.getNameAsString()));
-            }
-        } catch (Exception e) {
-            handleResolutionError("注解", n.toString(), e);
-        }
-        super.visit(n, arg);
-    }
+//    @Override
+//    public void visit(AnnotationExpr n, Void arg) {
+//        try {
+//            // 处理注解类型
+//            String qualifiedName = SymbolHelper.resolveAnnotationType(n, facade);
+//            if (qualifiedName != null) {
+//                store(qualifiedName, symbols -> symbols.getAnnotations().add(n.getNameAsString()));
+//            }
+//        } catch (Exception e) {
+//            handleResolutionError("注解", n.toString(), e);
+//        }
+//        super.visit(n, arg);
+//    }
     
     @Override
     public void visit(ObjectCreationExpr n, Void arg) {

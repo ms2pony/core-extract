@@ -1,4 +1,4 @@
-package com.example.depanalysis.api;
+package com.example.depanalysis.config;
 
 import lombok.Data;
 

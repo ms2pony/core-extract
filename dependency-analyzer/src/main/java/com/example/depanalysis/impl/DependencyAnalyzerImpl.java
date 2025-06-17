@@ -1,12 +1,12 @@
 package com.example.depanalysis.impl;
 
-import com.example.depanalysis.api.AnalysisConfig;
+import com.example.depanalysis.config.AnalysisConfig;
 import com.example.depanalysis.api.AnalysisReport;
 import com.example.depanalysis.api.DependencyAnalyzer;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.resolution.TypeSolver;
-import com.github.javaparser.symbolsolver.JavaParserFacade;
+import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;

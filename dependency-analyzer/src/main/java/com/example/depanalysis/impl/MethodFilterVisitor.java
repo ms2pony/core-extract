@@ -1,10 +1,10 @@
 package com.example.depanalysis.impl;
 
-import com.example.depanalysis.api.AnalysisConfig;
+import com.example.depanalysis.config.AnalysisConfig;
 import com.example.depanalysis.api.AnalysisReport;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import com.github.javaparser.symbolsolver.JavaParserFacade;
+import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import lombok.extern.slf4j.Slf4j;
 
 /**

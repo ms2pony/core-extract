@@ -1,5 +1,7 @@
 package com.example.depanalysis.api;
 
+import com.example.depanalysis.config.AnalysisConfig;
+
 import java.io.File;
 import java.io.IOException;
 
